@@ -6,6 +6,7 @@ require 'middleman-hikidoc/version'
 module Middleman
   module Renderers
     class Hikidoc < Middleman::Extension
+      option :format, :xhtml
       option :plugin_syntax, nil
       option :level, 1
       option :allow_bracket_inline_image, true
@@ -43,7 +44,16 @@ module Middleman
         end
 
         def evaluate(scope, locals, &block)
-          @output ||= HikiDoc.to_xhtml(data, Middleman::Renderers::Hikidoc.options)
+          options = Middleman::Renderers::Hikidoc.options
+          method = case options[:format]
+                   when :html
+                     :to_html
+                   when :xhtml, nil
+                     :to_xhtml
+                   else
+                     raise ArgumentError, "unknown value for format: #{options[:format].inspect}"
+                   end
+          @output ||= HikiDoc.__send__(method, data, options)
         end
 
         def allows_script?
